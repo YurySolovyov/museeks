@@ -17,6 +17,15 @@ const BrowserWindow = electron.BrowserWindow;    // Module to create native brow
 const appRoot = path.resolve(__dirname, '../..'); // app/ directory
 const srcPath = path.join(appRoot, 'src'); // app/src/ directory
 
+
+// --- media server
+
+const mediaServer = require('./media-server');
+mediaServer.init();
+
+// --- media server
+
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
 let mainWindow = null;
