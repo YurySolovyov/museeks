@@ -9,6 +9,7 @@ import fs   from 'fs';
 
 import mmd     from 'musicmetadata';
 import wavInfo from 'wav-file-info';
+import Promise from 'bluebird';
 
 
 const utils = {
@@ -162,6 +163,18 @@ const utils = {
         return chunks;
     },
 
+    getJson: function(url) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.addEventListener('load', function () {
+                resolve(JSON.parse(this.responseText));
+            }, false);
+            xhr.addEventListener('error', reject, false);
+            xhr.open('get', url, true);
+            xhr.send();
+        });
+    },
+
     /**
      * Get a file metadata
      *
@@ -189,80 +202,50 @@ const utils = {
             }
         */
 
-        if(path.extname(track) === '.wav') { // If WAV
+        this.getJson(`metadata://${track}`).then((meta) => {
+            const { tags = {}, duration } = meta;
 
-            wavInfo.infoByFilename(track, (err, info) => {
+            const defaults = {
+                album        : 'Unknown',
+                albumartist  : [],
+                artist       : ['Unknown artist'],
+                disk         : {
+                    no: 0,
+                    of: 0
+                },
+                duration     : duration,
+                genre        : [],
+                loweredMetas : {},
+                path         : track,
+                playCount    : 0,
+                title        : path.parse(track).base,
+                track        : {
+                    no: 0,
+                    of: 0
+                },
+                type         : 'track',
+                year         : ''
+            };
 
-                if (err) console.warn(err);
+            const loweredMetas = {
+                artist: tags.artist || defaults.artist,
+                album: tags.album || defaults.album,
+                albumartist: tags.album_artist || defaults.albumartist,
+                title: tags.title || defaults.albumartist,
+                genre: tags.genre || defaults.genre
+            };
 
-                const metadata = {
-                    album        : 'Unknown',
-                    albumartist  : [],
-                    artist       : ['Unknown artist'],
-                    disk         : {
-                        no: 0,
-                        of: 0
-                    },
-                    duration     : info.duration,
-                    genre        : [],
-                    loweredMetas : {},
-                    path         : track,
-                    playCount    : 0,
-                    title        : path.parse(track).base,
-                    track        : {
-                        no: 0,
-                        of: 0
-                    },
-                    type         : 'track',
-                    year         : ''
-                };
-
-                metadata.loweredMetas = {
-                    artist      : metadata.artist.map((meta) => utils.stripAccents(meta.toLowerCase())),
-                    album       : utils.stripAccents(metadata.album.toLowerCase()),
-                    albumartist : metadata.albumartist.map((meta) => utils.stripAccents(meta.toLowerCase())),
-                    title       : utils.stripAccents(metadata.title.toLowerCase()),
-                    genre       : metadata.genre.map((meta) => utils.stripAccents(meta.toLowerCase()))
-                };
-
-                callback(metadata);
+            return Object.assign({}, defaults, {
+                album: tags.album,
+                albumartist: [tags.album_artist],
+                artist: [tags.artist],
+                genre: [tags.genre],
+                title: [tags.title],
+                // track is available, will do later
+                year: [tags.date],
+                loweredMetas
             });
-
-        } else {
-
-            const stream = fs.createReadStream(track);
-
-            mmd(stream, { duration: true }, (err, data) => {
-
-                if(err) console.warn(`An error occured while reading ${track} id3 tags: ${err}`);
-
-                const metadata = {
-                    album        : data.album === null || data.album === '' ? 'Unknown' : data.album,
-                    albumartist  : data.albumartist,
-                    artist       : data.artist.length === 0 ? ['Unknown artist'] : data.artist,
-                    disk         : data.disk,
-                    duration     : data.duration === '' ? 0 : data.duration,
-                    genre        : data.genre,
-                    loweredMetas : {},
-                    path         : track,
-                    playCount    : 0,
-                    title        : data.title === null || data.title === '' ? path.parse(track).base : data.title,
-                    track        : data.track,
-                    type         : 'track',
-                    year         : data.year
-                };
-
-                metadata.loweredMetas = {
-                    artist      : metadata.artist.map((meta) => utils.stripAccents(meta.toLowerCase())),
-                    album       : utils.stripAccents(metadata.album.toLowerCase()),
-                    albumartist : metadata.albumartist.map((meta) => utils.stripAccents(meta.toLowerCase())),
-                    title       : utils.stripAccents(metadata.title.toLowerCase()),
-                    genre       : metadata.genre.map((meta) => utils.stripAccents(meta.toLowerCase()))
-                };
-
-                callback(metadata);
-            });
-        }
+        }).then(callback);
     }
 };
 

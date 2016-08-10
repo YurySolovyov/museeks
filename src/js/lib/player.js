@@ -45,7 +45,8 @@ class Player {
     }
 
     setAudioSrc(src) {
-        this.audio.src = src;
+        const url = new URL(src);
+        this.audio.src = `media://${url.pathname}`;
     }
 
     setAudioCurrentTime(currentTime) {

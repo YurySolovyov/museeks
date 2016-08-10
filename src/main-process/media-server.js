@@ -1,38 +1,60 @@
 const { app, protocol } = require('electron');
+const os = require('os');
 const path = require('path');
 const express = require('express');
 const mime = require('mime-types');
 const ffmpeg = require('fluent-ffmpeg');
 const sendSeekable = require('send-seekable');
+
 const outputFormat = 'wav';
+const platform = os.platform();
+const server = express();
+let port = 0;
 
-console.log(__dirname);
-ffmpeg.setFfmpegPath(path.join(__dirname, './media-server/ffmpeg/ffmpeg.exe'));
-ffmpeg.setFfprobePath(path.join(__dirname, './media-server/ffmpeg/ffprobe.exe'));
+const getExecutablePath = () => {
+    const ffmpeg = platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+    const ffprobe = platform === 'win32' ? 'ffprobe.exe' : 'ffprobe';
+    return {
+        ffmpegPath: path.join(__dirname, './media-server/ffmpeg', ffmpeg),
+        ffproblePath: path.join(__dirname, './media-server/ffmpeg', ffprobe)
+    };
+};
 
-const protocolHandler = (request, callback) => {
+const { ffmpegPath, ffproblePath } = getExecutablePath();
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffproblePath);
+
+const mediaProtocolHandler = (request, callback) => {
     const filepath = request.url.slice(8);
-    console.log('redirecting to ', `http://localhost:3000/${filepath}`);
-    console.log('protocol request', request);
+    console.log(request);
     callback({
-        url: `http://localhost:3000/?file=${filepath}`,
+        url: `http://localhost:${port}/?file=${filepath}`,
         method: 'get'
     });
 };
 
-const server = express();
+const metadataProtocolHandler = (request, callback) => {
+    const filepath = request.url.slice(11);
+    ffmpeg.ffprobe(filepath, (err, data) => {
+        const meta = JSON.stringify(data.format);
+        callback({
+            data: meta,
+            mimeType: mime.lookup('json')
+        });
+    });
+};
 
 server.use(sendSeekable);
 
 server.get('/', (req, res) => {
-    console.log('express request', req.query);
     if (req.query.file === 'favicon.ico') {
         res.end();
     }
+
     const filepath = path.resolve(req.query.file);
-    console.log('filepath', filepath);
+
     ffmpeg.ffprobe(filepath, (err, data) => {
-        console.log(err);
         const formatData = data.format;
         const stream = ffmpeg(filepath).format(outputFormat);
         res.sendSeekable(stream, {
@@ -42,13 +64,18 @@ server.get('/', (req, res) => {
     });
 });
 
-server.listen(3000, () => {
-    console.log('listening ...');
+const listener = server.listen(0, () => {
+    port = listener.address().port;
+    console.log(`listening on port ${port} ...`);
 });
 
 app.on('ready', () => {
-    protocol.registerHttpProtocol('media', protocolHandler, (error) => {
-        if (error) console.error('Failed to register protocol');
+    protocol.registerHttpProtocol('media', mediaProtocolHandler, (error) => {
+        if (error) console.error('Failed to register media protocol', error);
+    });
+
+    protocol.registerStringProtocol('metadata', metadataProtocolHandler, (error) => {
+        if (error) console.error('Failed to register metadata protocol', error);
     });
 });
 
