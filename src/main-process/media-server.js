@@ -54,12 +54,12 @@ server.get('/', (req, res) => {
 
     const filepath = path.resolve(req.query.file);
 
-    ffmpeg.ffprobe(filepath, (err, data) => {
-        const formatData = data.format;
+    ffmpeg.ffprobe(filepath, (err, meta) => {
         const stream = ffmpeg(filepath).format(outputFormat);
+        res.append('X-Content-Duration', meta.format.duration.toString());
         res.sendSeekable(stream, {
             type: mime.lookup(outputFormat),
-            length: formatData.size
+            length: meta.format.size
         });
     });
 });
