@@ -202,7 +202,7 @@ const utils = {
             }
         */
 
-        this.getJson(`metadata://${track}`).then((meta) => {
+        this.getJson(`metadata://localhost/?file=${encodeURIComponent(track)}`).then((meta) => {
             const { tags = {}, duration } = meta;
 
             const defaults = {

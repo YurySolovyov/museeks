@@ -1,6 +1,7 @@
 const { app, protocol } = require('electron');
 const os = require('os');
 const path = require('path');
+const querystring = require('querystring');
 const express = require('express');
 const mime = require('mime-types');
 const ffmpeg = require('fluent-ffmpeg');
@@ -26,8 +27,8 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffproblePath);
 
 const mediaProtocolHandler = (request, callback) => {
-    const filepath = request.url.slice(8);
-    console.log(request);
+    const filepath = request.url.slice(9);
+
     callback({
         url: `http://localhost:${port}/?file=${filepath}`,
         method: 'get'
@@ -35,7 +36,9 @@ const mediaProtocolHandler = (request, callback) => {
 };
 
 const metadataProtocolHandler = (request, callback) => {
-    const filepath = request.url.slice(11);
+    const pathKey = 'metadata://localhost/?file';
+    const filepath = querystring.parse(request.url)[pathKey];
+
     ffmpeg.ffprobe(filepath, (err, data) => {
         const meta = JSON.stringify(data.format);
         callback({
