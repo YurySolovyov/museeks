@@ -4,8 +4,9 @@ import path     from 'path';
 import teeny    from 'teeny-conf';
 import Promise  from 'bluebird';
 
-const remote = electron.remote;
-const app    = remote.app;
+const remote   = electron.remote;
+const webFrame = electron.webFrame;
+const app      = remote.app;
 
 
 /*
@@ -20,6 +21,8 @@ browserWindows.main = remote.getCurrentWindow();
 const pathUserData = app.getPath('userData'),
     pathSrc      = __dirname;
 
+
+webFrame.registerURLSchemeAsPrivileged('metadata');
 
 /*
 |--------------------------------------------------------------------------

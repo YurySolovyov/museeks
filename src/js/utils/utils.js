@@ -163,18 +163,6 @@ const utils = {
         return chunks;
     },
 
-    getJson: function(url) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.addEventListener('load', function () {
-                resolve(JSON.parse(this.responseText));
-            }, false);
-            xhr.addEventListener('error', reject, false);
-            xhr.open('get', url, true);
-            xhr.send();
-        });
-    },
-
     /**
      * Get a file metadata
      *
@@ -202,7 +190,8 @@ const utils = {
             }
         */
 
-        this.getJson(`metadata://localhost/?file=${encodeURIComponent(track)}`).then((meta) => {
+        const metadataUrl = `metadata://localhost/?file=${encodeURIComponent(track)}`;
+        fetch(metadataUrl).then((res) => res.json()).then((meta) => {
             const { tags = {}, duration } = meta;
 
             const defaults = {
