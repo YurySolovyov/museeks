@@ -10,7 +10,7 @@ class Player {
         this.audio.playbackRate = options.playbackRate || 1;
         this.audio.volume = options.playbackRate || 1;
         this.audio.muted = options.muted || false;
-        this.audio.preload = 'none';
+        this.audio.preload = 'metadata';
     }
 
     play() {

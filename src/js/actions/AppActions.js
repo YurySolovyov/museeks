@@ -32,12 +32,13 @@ const AppActions = {
 
         // Bind player events
         // Audio Events
-        Player.getAudio().addEventListener('ended', AppActions.player.next);
-        Player.getAudio().addEventListener('error', AppActions.player.audioError);
-        Player.getAudio().addEventListener('play', () => {
+        const audio = Player.getAudio();
+        audio.addEventListener('ended', AppActions.player.next);
+        audio.addEventListener('error', AppActions.player.audioError);
+        audio.addEventListener('play', () => {
             ipcRenderer.send('playerAction', 'play');
         });
-        Player.getAudio().addEventListener('pause', () => {
+        audio.addEventListener('pause', () => {
             ipcRenderer.send('playerAction', 'pause');
         });
 

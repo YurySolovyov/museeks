@@ -49,9 +49,7 @@ const metadataProtocolHandler = (request, callback) => {
     });
 };
 
-server.use(sendSeekable);
-
-server.get('/', (req, res) => {
+server.get('/', sendSeekable, (req, res) => {
     if (req.query.file === 'favicon.ico') {
         res.end();
     }
