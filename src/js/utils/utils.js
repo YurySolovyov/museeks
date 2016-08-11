@@ -217,21 +217,21 @@ const utils = {
             };
 
             const loweredMetas = {
-                artist: tags.artist || defaults.artist,
-                album: tags.album || defaults.album,
-                albumartist: tags.album_artist || defaults.albumartist,
-                title: tags.title || defaults.albumartist,
-                genre: tags.genre || defaults.genre
+                artist: [tags.artist || tags.ARTIST || defaults.artist],
+                album: tags.album || tags.ALBUM || defaults.album,
+                albumartist: tags.album_artist || tags.ALBUM_ARTIST || defaults.albumartist,
+                title: tags.title || tags.TITLE || defaults.albumartist,
+                genre: tags.genre || tags.GENRE || defaults.genre
             };
 
             return Object.assign({}, defaults, {
-                album: tags.album,
-                albumartist: [tags.album_artist],
-                artist: [tags.artist],
-                genre: [tags.genre],
-                title: [tags.title],
+                album: tags.album || tags.ALBUM,
+                albumartist: [tags.album_artist || tags.ALBUM_ARTIST],
+                artist: [tags.artist || tags.ARTIST],
+                genre: [tags.genre || tags.GENRE],
+                title: [tags.title || tags.TITLE],
                 // track is available, will do later
-                year: [tags.date],
+                year: [tags.date || tags.DATE],
                 loweredMetas
             });
         }).then(callback);
