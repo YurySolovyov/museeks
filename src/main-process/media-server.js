@@ -2,6 +2,7 @@ const { app, protocol } = require('electron');
 const os = require('os');
 const path = require('path');
 const querystring = require('querystring');
+const url = require('url');
 const express = require('express');
 const mime = require('mime-types');
 const ffmpeg = require('fluent-ffmpeg');
@@ -26,22 +27,23 @@ const { ffmpegPath, ffproblePath } = getExecutablePath();
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffproblePath);
 
-const mediaProtocolHandler = (request, callback) => {
-    const pathKey = 'media://localhost/?file';
-    const filepath = querystring.parse(request.url)[pathKey];
+const parseUrl = (s) => {
+    const parsedUrl = url.parse(s);
+    return querystring.parse(parsedUrl.query);
+};
 
-    console.log(filepath);
+const mediaProtocolHandler = (request, callback) => {
+    const { file, time } = parseUrl(request.url);
     callback({
-        url: `http://localhost:${port}/?file=${filepath}`,
+        url: `http://localhost:${port}/?file=${file}&time=${time}`,
         method: 'get'
     });
 };
 
 const metadataProtocolHandler = (request, callback) => {
-    const pathKey = 'metadata://localhost/?file';
-    const filepath = querystring.parse(request.url)[pathKey];
+    const { file } = parseUrl(request.url);
 
-    ffmpeg.ffprobe(filepath, (err, data) => {
+    ffmpeg.ffprobe(file, (err, data) => {
         const meta = JSON.stringify(data.format);
         callback({
             data: meta,
@@ -60,7 +62,8 @@ server.get('/', sendSeekable, (req, res) => {
         if (err) {
             console.log(err);
         }
-        const stream = ffmpeg(filepath).format(outputFormat);
+        const stream = ffmpeg(filepath).seekInput(req.query.time).format(outputFormat);
+        stream.on('error', () => { });
         res.append('X-Content-Duration', meta.format.duration.toString());
         res.sendSeekable(stream, {
             type: mime.lookup(outputFormat),

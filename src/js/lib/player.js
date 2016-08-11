@@ -46,12 +46,16 @@ class Player {
     }
 
     setAudioSrc(src) {
-        const newSrc = `media://localhost/?file=${src}`;
+        this.rawSrc = src;
+        const newSrc = `media://localhost/?file=${this.rawSrc}&time=0`;
         this.audio.src = newSrc;
     }
 
     setAudioCurrentTime(currentTime) {
-        this.audio.currentTime = currentTime;
+        this.audio.pause();
+        const newSrc = `media://localhost/?file=${this.rawSrc}&time=${currentTime | 0}`;
+        this.audio.src = newSrc;
+        this.audio.play();
     }
 }
 
