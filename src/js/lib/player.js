@@ -47,7 +47,8 @@ class Player {
 
     setAudioSrc(src) {
         const url = new URL(src);
-        this.audio.src = `media://localhost/?file=${encodeURIComponent(url.pathname)}`;
+        const newSrc = `media://localhost/?file=${encodeURIComponent(url.pathname)}`;
+        this.audio.src = newSrc;
     }
 
     setAudioCurrentTime(currentTime) {
