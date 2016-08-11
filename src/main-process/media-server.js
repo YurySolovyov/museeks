@@ -27,7 +27,8 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffproblePath);
 
 const mediaProtocolHandler = (request, callback) => {
-    const filepath = request.url.slice(9);
+    const pathKey = 'media://localhost/?file';
+    const filepath = querystring.parse(request.url)[pathKey];
 
     callback({
         url: `http://localhost:${port}/?file=${filepath}`,
