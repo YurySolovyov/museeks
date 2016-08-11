@@ -66,7 +66,7 @@ const utils = {
                 return i === 0 ? d : encodeURIComponent(d);
             })
             .reduce((a, b) => path.join(a, b));
-        return `file://${root}${location}`;
+        return `${root}${location}`;
     },
 
     /**

@@ -46,8 +46,7 @@ class Player {
     }
 
     setAudioSrc(src) {
-        const url = new URL(src);
-        const newSrc = `media://localhost/?file=${encodeURIComponent(url.pathname)}`;
+        const newSrc = `media://localhost/?file=${src}`;
         this.audio.src = newSrc;
     }
 

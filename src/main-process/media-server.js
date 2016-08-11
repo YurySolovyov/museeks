@@ -30,6 +30,7 @@ const mediaProtocolHandler = (request, callback) => {
     const pathKey = 'media://localhost/?file';
     const filepath = querystring.parse(request.url)[pathKey];
 
+    console.log(filepath);
     callback({
         url: `http://localhost:${port}/?file=${filepath}`,
         method: 'get'
@@ -55,8 +56,10 @@ server.get('/', sendSeekable, (req, res) => {
     }
 
     const filepath = path.resolve(req.query.file);
-
     ffmpeg.ffprobe(filepath, (err, meta) => {
+        if (err) {
+            console.log(err);
+        }
         const stream = ffmpeg(filepath).format(outputFormat);
         res.append('X-Content-Duration', meta.format.duration.toString());
         res.sendSeekable(stream, {
