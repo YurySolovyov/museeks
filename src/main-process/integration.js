@@ -6,15 +6,19 @@ if (platform === 'win32') {
     Integration = require('./integrations/win32');
 }
 
+if (platform === 'linux') {
+    Integration = require('./integrations/linux');
+}
+
 class IntegrationManager {
     constructor(win) {
-        if(Integration !== null) {
+        if (Integration !== null) {
             this.integration = new Integration(win);
         }
     }
 
     enable() {
-        if(Integration === null) return;
+        if (Integration === null) return;
         this.integration.enable();
     }
 
